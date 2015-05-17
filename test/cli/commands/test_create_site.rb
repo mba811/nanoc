@@ -50,6 +50,20 @@ class Nanoc::CLI::Commands::CreateSiteTest < Nanoc::TestCase
     end
   end
 
+  def test_compiled_site_output
+    FileUtils.mkdir('foo')
+    FileUtils.touch(File.join('foo', 'SomeFile.txt'))
+    Nanoc::CLI.run %w( create_site foo --force )
+
+    FileUtils.cd('foo') do
+      site = Nanoc::Int::Site.new('.')
+      site.compile
+
+      assert File.file?('output/index.html')
+      assert File.file?('output/sample/index.html')
+    end
+  end
+
   def test_default_encoding
     unless defined?(Encoding)
       skip 'No Encoding class'

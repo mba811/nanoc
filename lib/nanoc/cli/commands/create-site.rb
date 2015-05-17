@@ -107,11 +107,34 @@ EOS
 #!/usr/bin/env ruby
 
 compile '/**/*.html' do
-  filter :erb
   layout '/default.*'
 end
 
+# This is an example rule that matches RDoc (.rdoc) files, and filters them
+# using the :rdoc filter. A newly created site comes with one RDoc-formatted
+# file, content/samples.rdoc, for demonstration purposes.
+compile '/**/*.rdoc' do
+  filter :rdoc
+  layout '/default.*'
+end
+
+# This is an example rule that matches Markdown (.md) files, and filters them
+# using the :kramdown filter. It is commented out by default, because kramdown
+# is not bundled with nanoc or Ruby.
+#compile '/**/*.md' do
+#  filter :kramdown
+#  layout '/default.*'
+#end
+
 compile '/**/*' do
+end
+
+route '/**/*.{html,rdoc,md}' do
+  if item.identifier =~ '/index.*'
+    '/index.html'
+  else
+    item.identifier.without_ext + '/index.html'
+  end
 end
 
 route '/**/*' do
@@ -132,6 +155,16 @@ EOS
 </ul>
 
 <p>If you need any help with customizing your nanoc web site, be sure to check out the documentation (see sidebar), and be sure to subscribe to the discussion group (also see sidebar). Enjoy!</p>
+EOS
+
+    DEFAULT_ITEM_SAMPLE = <<EOS unless defined? DEFAULT_ITEM_SAMPLE
+---
+title: Sample page
+---
+
+This is a sample page that uses {RDoc markup}[http://docs.seattlerb.org/rdoc/RDoc/Markup.html]. _Markdown_ is a more common choice for markup, but RDoc is bundled with Ruby.
+
+You are free to delete this page or replace it with something else.
 EOS
 
     DEFAULT_STYLESHEET = <<EOS unless defined? DEFAULT_STYLESHEET
@@ -324,6 +357,16 @@ EOS
           io << DEFAULT_ITEM
         end
         Nanoc::Int::NotificationCenter.post(:file_created, 'content/index.html')
+
+        # Sample page
+        File.open('content/sample.rdoc', 'w') do |io|
+          io << '---' << "\n"
+          io << 'title: Sample' << "\n"
+          io << '---' << "\n"
+          io << "\n"
+          io << DEFAULT_ITEM_SAMPLE
+        end
+        Nanoc::Int::NotificationCenter.post(:file_created, 'content/sample.rdoc')
 
         # Style sheet
         File.open('content/stylesheet.css', 'w') do |io|
